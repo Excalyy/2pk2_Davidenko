@@ -27,7 +27,7 @@
             PrintArray(arr);
         }
 
-        // Метод для реверса части массива
+        // Метод для вывода части массива
         static void ReverseArray(int[] arr, int startIndex, int endIndex)
         {
             while (startIndex < endIndex)
