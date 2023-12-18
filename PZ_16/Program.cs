@@ -23,7 +23,6 @@ class Program
             DrawMap();
             DrawStats();
 
-            var input = Console.ReadKey();
 
             if (input.Key == ConsoleKey.UpArrow)
             {
@@ -60,31 +59,9 @@ class Program
                 break;
             }
         }
-
-        Console.WriteLine("Нажмите любую клавишу для выхода...");
-        Console.ReadKey();
     }
 
-    static void InitializeGame()
-    {
-        map = new char[25, 25];
-        playerX = 12;
-        playerY = 12;
-        health = 50;
-        attackPower = 10;
-        steps = 0;
-        enemyCount = 10;
-        healthAidCount = 5;
-        buffCount = 5;
 
-        // генерация карты
-        for (int i = 0; i < 25; i++)
-        {
-            for (int j = 0; j < 25; j++)
-            {
-                map[i, j] = '_';
-            }
-        }
 
         // размещение игрока на карте
         map[playerY, playerX] = 'P';
@@ -201,7 +178,6 @@ class Program
                 buffCount--;
             }
         }
-    }
 
     static void SaveGame()
     {
