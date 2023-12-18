@@ -1,196 +1,234 @@
-﻿using System;
-using System.IO;
+﻿
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using static System.Formats.Asn1.AsnWriter;
 
-class Program
+namespace SnakeGame
 {
-    static char[,] map; // карта игры
-    static int playerX, playerY; // координаты игрока
-    static int health; // здоровье игрока
-    static int attackPower; // сила удара игрока
-    static int steps; // количество сделанных шагов
-    static int enemyCount; // количество врагов на карте
-    static int healthAidCount; // количество аптечек на карте
-    static int buffCount; // количество баффов на карте
-
-    static Random random = new Random();
-
-    static void Main()
+    [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
+    class Program
     {
-        InitializeGame();
-
-        while (true)
+        static void Main(string[] args)
         {
-            DrawMap();
-            DrawStats();
+            int screenwidth = Console.WindowWidth;
+            int screenheight = Console.WindowHeight;
 
 
-            if (input.Key == ConsoleKey.UpArrow)
+            Console.SetCursorPosition(screenwidth / 2 - 10, screenheight / 2);
+            Console.WriteLine("----Добро пожаловать в игру----");
+            Console.SetCursorPosition(screenwidth / 2 - 10, screenheight / 2 + 4);
+            Console.WriteLine("Нажмите клавишу 'F' чтобы начать...");
+
+            ConsoleKey key = Console.ReadKey(true).Key;
+
+            if (key.ToString().ToUpper() == "F" || key.ToString().ToUpper() == "Ф")
             {
-                MovePlayer(0, -1);
-            }
-            else if (input.Key == ConsoleKey.RightArrow)
-            {
-                MovePlayer(1, 0);
-            }
-            else if (input.Key == ConsoleKey.DownArrow)
-            {
-                MovePlayer(0, 1);
-            }
-            else if (input.Key == ConsoleKey.LeftArrow)
-            {
-                MovePlayer(-1, 0);
-            }
-            else if (input.Key == ConsoleKey.Escape)
-            {
-                SaveGame();
-                Console.WriteLine("\nИгра сохранена.");
-                break;
-            }
-
-            if (health <= 0)
-            {
-                Console.WriteLine("\nВы проиграли.");
-                break;
-            }
-
-            if (enemyCount == 0)
-            {
-                Console.WriteLine($"\nВы выиграли! Количество шагов: {steps}.");
-                break;
-            }
-        }
-    }
+                Console.WindowHeight = 22;
+                Console.WindowWidth = 42;
+                Console.SetWindowSize(screenwidth, screenheight);
+                Random randomnummer = new Random();
 
 
 
-        // размещение игрока на карте
-        map[playerY, playerX] = 'P';
+                pixel hoofd = new pixel();
+                hoofd.xpos = screenwidth / 2;
+                hoofd.ypos = screenheight / 2;
 
-        // размещение врагов на карте
-        for (int i = 0; i < enemyCount; i++)
-        {
-            int enemyX, enemyY;
-            do
-            {
-                enemyX = random.Next(25);
-                enemyY = random.Next(25);
-            } while (map[enemyY, enemyX] != '_');
-            map[enemyY, enemyX] = 'E';
-        }
+                string movement = "";
+                List<int> xposlijf = new List<int>();
+                List<int> yposlijf = new List<int>();
 
-        // размещение аптечек на карте
-        for (int i = 0; i < healthAidCount; i++)
-        {
-            int healthAidX, healthAidY;
-            do
-            {
-                healthAidX = random.Next(25);
-                healthAidY = random.Next(25);
-            } while (map[healthAidY, healthAidX] != '_');
-            map[healthAidY, healthAidX] = 'H';
-        }
-
-        // размещение баффов на карте
-        for (int i = 0; i < buffCount; i++)
-        {
-            int buffX, buffY;
-            do
-            {
-                buffX = random.Next(25);
-                buffY = random.Next(25);
-            } while (map[buffY, buffX] != '_');
-            map[buffY, buffX] = 'B';
-        }
-    }
-
-    static void DrawMap()
-    {
-        Console.Clear();
-        for (int i = 0; i < 25; i++)
-        {
-            for (int j = 0; j < 25; j++)
-            {
-                Console.Write(map[i, j]);
-            }
-            Console.WriteLine();
-        }
-    }
-
-    static void DrawStats()
-    {
-        Console.WriteLine($"\nШагов: {steps} | Здоровье: {health} | Сила удара: {attackPower}");
-    }
-
-    static void MovePlayer(int offsetX, int offsetY)
-    {
-        int newX = playerX + offsetX;
-        int newY = playerY + offsetY;
-
-        if (newX >= 0 && newX < 25 && newY >= 0 && newY < 25)
-        {
-            char destination = map[newY, newX];
-
-            if (destination == '_')
-            {
-                map[playerY, playerX] = '_';
-                playerX = newX;
-                playerY = newY;
-                map[playerY, playerX] = 'P';
-                steps++;
-            }
-            else if (destination == 'E')
-            {
-                int enemyHP = 30;
-                while (enemyHP > 0 && health > 0)
+                List<pixel> apples = new List<pixel>();
+                for (int i = 0; i < 3; i++)
                 {
-                    enemyHP -= attackPower;
-                    health -= 5;
+                    pixel apple = new pixel();
+                    apple.xpos = randomnummer.Next(1, screenwidth - 2);
+                    apple.ypos = randomnummer.Next(1, screenheight - 2);
+                    apples.Add(apple);
                 }
 
-                if (enemyHP <= 0)
+                TimeSpan tijd = TimeSpan.FromSeconds(0.1);
+
+                int score = 1;
+                int gameover = 0;
+                while (gameover != 5 && gameover != 5) // Добавлено условие для победы
                 {
-                    map[playerY, playerX] = '_';
-                    playerX = newX;
-                    playerY = newY;
-                    map[playerY, playerX] = 'P';
-                    steps++;
-                    enemyCount--;
+                    Console.Clear();
+
+                    if (hoofd.xpos <= 0 || hoofd.xpos >= screenwidth - 1 || hoofd.ypos <= 0 || hoofd.ypos >= screenheight - 1) // Изменено условие на выход головы за пределы игрового поля                    {
+                        gameover = 1;
                 }
+
+                for (int i = 0; i < screenwidth; i++)
+                {
+                    Console.SetCursorPosition(i, 0);
+                    Console.Write("■");
+                }
+
+                for (int i = 0; i < screenwidth; i++)
+                {
+                    Console.SetCursorPosition(i, screenheight - 1);
+                    Console.Write("■");
+                }
+
+                for (int i = 0; i < screenheight; i++)
+                {
+                    Console.SetCursorPosition(0, i);
+                    Console.Write("■");
+                }
+
+                for (int i = 0; i < screenheight; i++)
+                {
+                    Console.SetCursorPosition(screenwidth - 1, i);
+                    Console.Write("■");
+                }
+
+                foreach (pixel apple in apples)
+                {
+                    Console.SetCursorPosition(apple.xpos, apple.ypos);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("■");
+                }
+
+                if (apples.Any(a => a.xpos == hoofd.xpos && a.ypos == hoofd.ypos))
+                {
+                    score++;
+                    pixel eatenApple = apples.FirstOrDefault(a => a.xpos == hoofd.xpos && a.ypos == hoofd.ypos);
+                    apples.Remove(eatenApple);
+
+                    pixel newApple = new pixel();
+                    newApple.xpos = randomnummer.Next(1, screenwidth - 2);
+                    newApple.ypos = randomnummer.Next(1, screenheight - 2);
+                    apples.Add(newApple);
+
+                    xposlijf.Add(0);
+                    yposlijf.Add(0);
+                }
+
+                if (xposlijf.Contains(hoofd.xpos) && yposlijf.Contains(hoofd.ypos)) // Изменено условие на столкновение головы с хвостом
+                {
+                    gameover = 1;
+                }
+
+                for (int i = 0; i < xposlijf.Count(); i++)
+                {
+                    Console.SetCursorPosition(xposlijf[i], yposlijf[i]);
+                    Console.Write("■");
+
+                    if (xposlijf[i] == hoofd.xpos && yposlijf[i] == hoofd.ypos)
+                    {
+                        gameover = 1;
+                    }
+                }
+
+                Console.SetCursorPosition(hoofd.xpos, hoofd.ypos);
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write("■");
+
+                Console.CursorVisible = false;
+                Console.SetCursorPosition(5, screenheight);
+                Console.Write("Счёт: " + score);
+                Console.SetCursorPosition(20, screenheight);
+                Console.Write("Змейка");
+
+                if (Console.KeyAvailable)
+                {
+                    ConsoleKeyInfo toets = Console.ReadKey(true);
+
+                    if (toets.Key.Equals(ConsoleKey.LeftArrow) && movement != "RIGHT")
+                    {
+                        movement = "LEFT";
+                    }
+
+                    if (toets.Key.Equals(ConsoleKey.RightArrow) && movement != "LEFT")
+                    {
+                        movement = "RIGHT";
+                    }
+
+                    if (toets.Key.Equals(ConsoleKey.UpArrow) && movement != "DOWN")
+                    {
+                        movement = "UP";
+                    }
+
+                    if (toets.Key.Equals(ConsoleKey.DownArrow) && movement != "UP")
+                    {
+                        movement = "DOWN";
+                    }
+
+                    if (toets.Key.Equals(ConsoleKey.Escape))
+                    {
+                        Environment.Exit(0);
+                    }
+                }
+
+                switch (movement)
+                {
+                    case "LEFT":
+                        hoofd.xpos--;
+                        break;
+                    case "RIGHT":
+                        hoofd.xpos++;
+                        break;
+                    case "UP":
+                        hoofd.ypos--;
+                        break;
+                    case "DOWN":
+                        hoofd.ypos++;
+                        break;
+                }
+
+                if (hoofd.xpos <= 0 || hoofd.xpos >= screenwidth || hoofd.ypos <= 0 || hoofd.ypos >= screenheight) // Изменено условие на выход головы за пределы игрового поля
+                {
+                    gameover = 1;
+                }
+
+                xposlijf.Add(hoofd.xpos);
+                yposlijf.Add(hoofd.ypos);
+
+                while (xposlijf.Count > score)
+                {
+                    xposlijf.RemoveAt(0);
+                    yposlijf.RemoveAt(0);
+                }
+
+                Thread.Sleep(tijd);
             }
-            else if (destination == 'H')
+
+            Console.Clear();
+
+            if (gameover == 1)
             {
-                health = 50;
-                map[playerY, playerX] = '_';
-                playerX = newX;
-                playerY = newY;
-                map[playerY, playerX] = 'P';
-                steps++;
-                healthAidCount--;
+                Console.SetCursorPosition(screenwidth / 2 - 10, screenheight / 2);
+                Console.WriteLine("Игра завершена, Ваш результат: " + score);
             }
-            else if (destination == 'B')
+            else if (gameover == 2)
             {
-                attackPower *= 2;
-                map[playerY, playerX] = '_';
-                playerX = newX;
-                playerY = newY;
-                map[playerY, playerX] = 'P';
-                steps++;
-                buffCount--;
+                Console.SetCursorPosition(screenwidth / 2 - 10, screenheight / 2);
+                Console.WriteLine("Вы победили, Ваш результат: " + score);
             }
+
+            Console.SetCursorPosition(screenwidth / 2 - 10, screenheight / 2 + 4);
+            Console.WriteLine("Нажмите Enter чтобы играть снова...");
+
+            while (Console.ReadKey().Key != ConsoleKey.Enter) { } // Ожидаем нажатия клавиши Enter
+
+            Console.Clear(); // Очищаем консоль
+
+            Main(args); // Начинаем новую игру
         }
 
-    static void SaveGame()
-    {
-        using (StreamWriter writer = new StreamWriter("save.txt"))
+        private string GetDebuggerDisplay()
         {
-            writer.WriteLine(playerX);
-            writer.WriteLine(playerY);
-            writer.WriteLine(health);
-            writer.WriteLine(attackPower);
-            writer.WriteLine(steps);
-            writer.WriteLine(enemyCount);
-            writer.WriteLine(healthAidCount);
-            writer.WriteLine(buffCount);
+            return ToString();
         }
+    }
+    class pixel
+    {
+        public int xpos { get; set; }
+        public int ypos { get; set; }
     }
 }
