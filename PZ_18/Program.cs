@@ -22,7 +22,7 @@ namespace ConsoleApp1
                 }
                 else
                 {
-                    Console.WriteLine($"{patient1.FullName} не является совершеннолетним");
+                    Console.WriteLine($"{patient1.FullName} не является совершеннолетним.");
                 }
 
                 patient1.Discharge();
